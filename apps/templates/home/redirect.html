@@ -1,0 +1,54 @@
+{% extends 'layouts/base-fullscreen.html' %}
+
+{% block title %} Spotify Redirect URL {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+  <section>
+
+    <div class="page-header section-height-75" style="padding: 20px;">
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-4 col-lg-5 col-md-6 d-flex flex-column mx-auto">
+            <div class="card card-plain mt-8">
+              <div class="card-header pb-0 text-left bg-transparent">
+                <h3 class="font-weight-bolder text-danger text-gradient">
+                    Redirect
+                </h3>
+                <p class="mb-0 text-danger">
+                    Spotify Redirect URL - Paste the URL into the Flask application.
+                </p>
+                <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 10px;">
+                  <!-- Add Copy URL Link -->
+                  <button onclick="copyCurrentURL()" class="btn btn-secondary" style="flex-grow: 1;">Copy URL</button>
+                  <!-- Add Home Link -->
+                  <a href="/index.html" class="btn btn-primary" style="flex-grow: 1;">Home</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </section>
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+<script>
+    function copyCurrentURL() {
+        navigator.clipboard.writeText(window.location.href)
+        .then(() => {
+            alert("URL copied to clipboard");
+        })
+        .catch(err => {
+            console.error('Error in copying text: ', err);
+        });
+    }
+</script>
+{% endblock javascripts %}
