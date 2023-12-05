@@ -75,6 +75,22 @@
         
       </div>
 
+      <div class="row">
+        <div class="col-12 mb-3">
+            <div class="card h-100">
+                <div class="card-header pb-0 p-3">
+                    <h6 class="mb-0">Adjust Threshold</h6>
+                </div>
+                <div class="card-body p-3">
+                    <input type="range" class="form-range" min="0" max="50" value="6" id="threshold-slider">
+                    <p>Current Threshold Value: <span id="threshold-value">6</span></p>
+                </div>
+            </div>
+        </div>
+        <!-- Your other content here -->
+      </div>
+    
+
       {% include "includes/footer.html" %}
 
     </div>
@@ -86,6 +102,20 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function(){
+        var currentThreshold = 6; // Default threshold value
+
+        // Function to update threshold value display
+        function updateThresholdDisplay(value) {
+          $('#threshold-value').text(value); // Update the display text
+          $('#threshold-slider').val(value); // Update the slider's position
+        }
+
+        // Event listener for the threshold slider
+        $('#threshold-slider').on('change', function() {
+            currentThreshold = $(this).val();
+            updateThresholdDisplay(currentThreshold);
+            handleThresholdUpdate()
+        });
         function updatePlaylists() {
             $.ajax({
                 url: '/get-playlist-data', // URL to the route that returns playlist data
@@ -110,9 +140,22 @@
             });
         }
 
+        function updateThreshold() {
+            $.ajax({
+                url: '/get-threshold', // URL to the route that returns playlist data
+                type: 'GET',
+                success: function(data) {
+                  currentThreshold = data.threshold;
+                  updateThresholdDisplay(currentThreshold)
+                }
+            });
+        }
+
         // Call updatePlaylists initially and set interval for auto-updating
         updatePlaylists();
         setInterval(updatePlaylists, 120000);
+        updateThreshold();
+        setInterval(updateThreshold, 120000);
 
         // Function to handle add/remove playlist
         function handlePlaylistUpdate(playlistType, playlistName) {
@@ -123,6 +166,19 @@
                 data: JSON.stringify({ type: playlistType, name: playlistName.trim() }),
                 success: function(response) {
                     updatePlaylists(); // Update the playlists after modification
+                }
+            });
+        }
+
+        // Function to handle add/remove playlist
+        function handleThresholdUpdate() {
+            $.ajax({
+                url: '/update-threshold',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ threshold: currentThreshold }),
+                success: function(response) {
+                    updateThreshold(); // Update the playlists after modification
                 }
             });
         }

@@ -27,11 +27,12 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
                                                scope=scope))
 
 # Data store initialization for received data and current song
+threshold = 10
 received_data = ""
-chart_data = [6, 6, 6, 6, 6, 6, 6, 6, 6]
+chart_data = [threshold] * 9
 playlists = {
-    'highAlpha': ['Upbeat', 'Energetic', 'Active'],
-    'highBeta': ['Sleep', 'Meditation', 'Relaxed']
+    'highAlpha': ['Sleep', 'Meditation', 'Relaxed'],
+    'highBeta': ['Upbeat', 'Energetic', 'Active']
 }
 current_genre = ""
 current_playlist = ""
@@ -74,12 +75,13 @@ def index():
                            album_cover_url=album_cover_url, 
                            playlist_name=playlist_name, 
                            current_genre=current_genre, 
+                           threshold=threshold,
                            segment='index')
 
 # Route for handling EEG data received via POST request
 @app.route('/eeg-data', methods=['POST'])
 def eeg_data():
-    global chart_data, current_genre, current_playlist
+    global chart_data, current_genre, current_playlist, threshold
     if request.form:
         data_received = request.form.get('data')
     else:
@@ -88,7 +90,7 @@ def eeg_data():
     print(f"Received data: {data_received}")
     chart_data.pop(0)
     chart_data.append(int(data_received))
-    required_playlist = 'highBeta' if all(x < 250 for x in chart_data) else 'highAlpha' if all(x >= 250 for x in chart_data) else current_genre 
+    required_playlist = 'highBeta' if all(x < int(threshold) for x in chart_data) else 'highAlpha' if all(x > int(threshold) for x in chart_data) else current_genre 
 
     if required_playlist != current_genre:
         current_genre = required_playlist
@@ -115,6 +117,7 @@ def data():
 def update_data():
     global received_data
     global chart_data
+    global threshold
     current_song, artist_name, album_cover_url, playlist_name = get_current_song()
     return jsonify(
         received_data=received_data, 
@@ -123,6 +126,7 @@ def update_data():
         playlist_name=playlist_name, 
         album_cover_url=album_cover_url,
         current_genre=current_genre, 
+        threshold=threshold,
         chartData=chart_data
     )
 
@@ -146,6 +150,20 @@ def update_playlist():
 def get_playlist_data():
     global playlists
     return jsonify(playlists)
+
+# Route for updating threshold based on user interaction
+@app.route('/update-threshold', methods=['POST'])
+def update_threshold():
+    global threshold
+    data = request.json
+    threshold = data['threshold']
+    return jsonify({"message": "Threshold updated"})
+
+# Route for retrieving threshold data in JSON format
+@app.route('/get-threshold')
+def get_threshold():
+    global threshold
+    return jsonify(threshold=threshold)
 
 # Catch-all route for any undefined URLs
 @app.route('/<path:path>')

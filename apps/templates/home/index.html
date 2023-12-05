@@ -79,6 +79,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
   var myChart;
+  var thresholdValue = 0; // Global variable to hold the threshold value
 
   $(document).ready(function () {
     function fetchData() {
@@ -91,7 +92,6 @@
           $('#playlist-name').text(data.playlist_name);
           $('#received-data').text(data.received_data);
           $('#album-cover').attr('src', data.album_cover_url ? data.album_cover_url : `/static/assets/img/nothing-playing.png`);
-
           if (data.current_song === '') {
             $('#current-genre').text('');
           } else if (data.current_genre === 'highAlpha') {
@@ -99,9 +99,16 @@
           } else if (data.current_genre === 'highBeta') {
             $('#current-genre').text('Playing from High Beta');
           }
+          
+          // var threshold = parseFloat($('#threshold').text()); // Fetch the threshold value
+          // Fetch the threshold value, assuming it's an integer
+          thresholdValue = data.threshold;
+
+
           // Update the chart with new data
           if (myChart) {
             myChart.data.datasets[0].data = data.chartData; // Assuming data.chartData is an array of values for the chart
+            myChart.data.datasets[1].data = Array(9).fill(thresholdValue)
             myChart.update();
           }
         },
@@ -131,12 +138,14 @@
     gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
     gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
 
+    
+
     myChart = new Chart(ctx2, {
       type: "line",
       data: {
         labels: ["", "", "", "", "", "", "", "", ""],
         datasets: [{
-          // label: "Mobile apps",
+          label: "EEG Data",
           tension: 0.4,
           borderWidth: 0,
           pointRadius: 0,
@@ -144,11 +153,22 @@
           borderWidth: 3,
           backgroundColor: gradientStroke1,
           fill: true,
-          data: [250, 250, 250, 250, 250, 250, 250, 250, 250],
-          // data: [50, 40, 300, 220, 500, 250, 400, 230, 500],
+          data: [],
           maxBarThickness: 6
 
         },
+        {
+            label: 'Threshold',
+            data: [],
+            tension: 0.4,
+            borderWidth: 0,
+            pointRadius: 0,
+            borderColor: "#575f9a",
+            borderWidth: 3,
+            backgroundColor: gradientStroke2,
+            fill: true,
+            maxBarThickness: 6
+          },
         ],
       },
       options: {
@@ -166,7 +186,10 @@
         scales: {
           y: {
             // min: 0,        // Set minimum value for y-axis
-            // max: 500, 
+            // max: 20, 
+            type: 'logarithmic', // Set Y-axis to logarithmic scale
+            min: 1,
+            max: 40,   
             grid: {
               drawBorder: false,
               display: true,
